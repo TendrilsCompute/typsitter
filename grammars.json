@@ -724,11 +724,6 @@
     "rev": "5a8fdd446b516c81e218245c12129c6ad4bccfa2",
     "hash": "sha256-TfLCG2Ro3QnGStyCNqHwO54HQMR2fEOV6FjBv+0LjJ0="
   },
-  "ssh-client-config": {
-    "git": "https://github.com/metio/tree-sitter-ssh-client-config",
-    "rev": "f8329830a32fa151465186ea5a1e3fc687d47100",
-    "hash": "sha256-fq5lH3ykKp7NlGH90+FS95EkXDNfvvRyLH57VT8B2pA="
-  },
   "ssh-config": {
     "git": "https://github.com/tree-sitter-grammars/tree-sitter-ssh-config",
     "rev": "2d620d0ad636705800cf0ddb92c30afe703cd84f",
