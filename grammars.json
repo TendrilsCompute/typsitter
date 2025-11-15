@@ -249,11 +249,6 @@
     "rev": "24a6c8ef698e4480fecf8340d771fbcb5de8fbb4",
     "hash": "sha256-TjF79WH3bX4nueYr8CbPptkNb2lNkHQNB0VZoMB35Nk="
   },
-  "gnuplot": {
-    "git": "https://github.com/dpezto/tree-sitter-gnuplot",
-    "rev": "8923c1e38b9634a688a6c0dce7c18c8ffb823e79",
-    "hash": "sha256-fR3lIscfrBqpBH1jZ4RB1Qa8r+hxy6I0OzzoQqAe2aw="
-  },
   "go": {
     "git": "https://github.com/tree-sitter/tree-sitter-go",
     "rev": "9d780544a2226ccd1a2a57299903d51d0d8c8951",
