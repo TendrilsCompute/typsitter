@@ -4,19 +4,10 @@
   nushell,
   emscripten,
   stdenvNoCC,
-  writeText,
   typsitterGrammars,
+  lib,
 }:
 let
-  grammarPathsJson = writeText "grammar-paths.json" (
-    builtins.toJSON (builtins.attrValues typsitterGrammars)
-  );
-  treeSitterSource = fetchFromGitHub {
-    owner = "tree-sitter";
-    repo = "tree-sitter";
-    rev = "0bb43f7afb5f0d83579007037a13d1fede636dbd";
-    hash = "sha256-mEgH+vx4Emrkl9P7Str0511kM7e6axcL1ovF/cjUFmk=";
-  };
   wasi-stub = rustPlatform.buildRustPackage rec {
     pname = "wasi-stub";
     version = "0.2.0";
@@ -30,24 +21,59 @@ let
     cargoBuildFlags = "--bin wasi-stub";
     doCheck = false;
   };
+  emccCache = stdenvNoCC.mkDerivation {
+    name = "typsitter-emcc-cache";
+    dontUnpack = true;
+    nativeBuildInputs = [
+      emscripten
+    ];
+    buildPhase = ''
+      mkdir cache
+      touch empty.c
+      EM_CACHE="$PWD/cache" emcc empty.c --no-entry -O3 -o _.wasm
+      tar -czf $out cache
+    '';
+  };
+  treeSitterSource = fetchFromGitHub {
+    owner = "tree-sitter";
+    repo = "tree-sitter";
+    rev = "0bb43f7afb5f0d83579007037a13d1fede636dbd";
+    hash = "sha256-mEgH+vx4Emrkl9P7Str0511kM7e6axcL1ovF/cjUFmk=";
+  };
+  results = builtins.mapAttrs (
+    name: path:
+    stdenvNoCC.mkDerivation {
+      name = "typsitter-${name}";
+      src = lib.fileset.toSource {
+        root = ./.;
+        fileset = lib.fileset.unions [
+          ./typsitter.nu
+          ./typsitter.c
+        ];
+      };
+      nativeBuildInputs = [
+        nushell
+        emscripten
+        wasi-stub
+      ];
+      buildPhase = ''
+        tar -xzf ${emccCache}
+        EM_CACHE=$"$PWD/cache" nu typsitter.nu \
+          ${path} --tree-sitter ${treeSitterSource} --output $out
+      '';
+    }
+  ) typsitterGrammars;
 in
 stdenvNoCC.mkDerivation {
   name = "typsitter";
-  src = ./.;
-  nativeBuildInputs = [
-    nushell
-    emscripten
-    wasi-stub
-  ];
+  dontUnpack = true;
   buildPhase = ''
-    nu -c '
-      use typsitter.nu
-      mkdir cache
-      (EM_CACHE=$"($env.PWD)/cache" typsitter
-        ...(open ${grammarPathsJson})
-        --tree-sitter ${treeSitterSource}
-        --output $env.out
-      )
-    '
+    mkdir -p $out/langs
+    for result in ${builtins.concatStringsSep " " (builtins.attrValues results)}; do
+      for lang in $result/langs/*; do
+        cp $lang $out/langs
+      done
+      cat $result/langs.typ >> $out/langs.typ
+    done
   '';
 }
