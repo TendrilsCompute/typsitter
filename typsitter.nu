@@ -24,16 +24,15 @@ export def main [...paths: path, --force, --tree-sitter: path, --output: path = 
   | each {|path|
     open ($path | path join tree-sitter.json) | get grammars
     | upsert path {|r| $path | path join ($r | get -o path | default "")}
-    | upsert highlights {$in | default []}
-    | where highlights != []
+    | upsert highlights {default ["queries/highlights.scm"]}
     | update highlights {
-      $in
-      | append []
+      append []
       | each {|rel| $path | path join $rel}
       | where ($it | path exists)
       | each {open $in}
-      | str join "\n"
     }
+    | where highlights != []
+    | update highlights {str join "\n"}
   }
   | flatten
   | update name {str replace -ar '\W' '_'}
